@@ -63,11 +63,11 @@ def input_fn(df):
   return feature_cols, label
 
 def train_input_fn():
-  train_file = '~/Desktop/pysource/eval4.csv'
+  train_file = '~/Desktop/pysource/testprob_input.csv'
   df_train =  pd.read_csv(train_file,names=COLUMNS, skiprows=1)
   df_train[LABEL_COLUMN] = (df_train["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
-  df_train["SrcAddr"] = ((df_train["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
-  df_train["StartTime"] = ((df_train["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
+  #df_train["SrcAddr"] = ((df_train["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
+  #df_train["StartTime"] = ((df_train["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
   
   return input_fn(df_train)
 
@@ -75,8 +75,8 @@ def eval_input_fn():
   test_file = '~/Desktop/pysource/eval5.csv'
   df_test = pd.read_csv(test_file,names=COLUMNS, skiprows=1)
   df_test[LABEL_COLUMN] = (df_test["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
-  df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
-  df_test["StartTime"] = ((df_test["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
+  #df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
+  #df_test["StartTime"] = ((df_test["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
   
   return input_fn(df_test)
 
@@ -103,7 +103,7 @@ def main():
     print(333)
 
     model_dir = tempfile.mkdtemp()
-    m = tf.contrib.learn.LinearClassifier(feature_columns=[SrcAddr,SrcRate,StartTime,sHops,dHops,sTtl,dTtl],
+    m = tf.contrib.learn.LinearClassifier(feature_columns=[SrcRate,sHops,dHops,sTtl],
     model_dir=model_dir)
 
   
@@ -117,7 +117,7 @@ def main():
 
     pred_proba = m.predict_proba(x=None, input_fn=lambda: eval_input_fn())
     
-    writes = csv.writer(open('testprob.csv', 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
+    writes = csv.writer(open('testprob_result.csv', 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
     writes.writerows(pred_proba)
 
     
@@ -146,7 +146,6 @@ def main():
   StartTime = tf.contrib.layers.sparse_column_with_hash_bucket("StartTime", hash_bucket_size=1000)
   LastTime = tf.contrib.layers.sparse_column_with_hash_bucket("LastTime", hash_bucket_size=1000)
   Tag = tf.contrib.layers.sparse_column_with_hash_bucket("Tag", hash_bucket_size=1000)
-
   SrcAddr_x_DstAddr_x_Sport_x_Dport = tf.contrib.layers.crossed_column([SrcAddr, DstAddr, Sport, Dport], hash_bucket_size=int(1e6))
 """
   
@@ -164,7 +163,6 @@ def main():
   Dur = tf.contrib.layers.real_valued_column("Dur")
 """
 """
-
   sTtl_bucket = tf.contrib.layers.bucketized_column(sTtl, boundaries=[40,80,120,160,200,240,280])
   dTtl_bucket = tf.contrib.layers.bucketized_column(dTtl, boundaries=[40,80,120,160,200,240])
   #TcpRtt_bucket = tf.contrib.layers.bucketized_column(TcpRtt, boundaries=[1])
@@ -176,21 +174,15 @@ def main():
   DstBytes_bucket = tf.contrib.layers.bucketized_column(DstBytes, boundaries=[100,200,300,400,500,600,700,800,900,1000])
   SAppBytes_bucket = tf.contrib.layers.bucketized_column(SAppBytes, boundaries=[40,80,120,160,200,240])
   DAppBytes_bucket = tf.contrib.layers.bucketized_column(DAppBytes, boundaries=[40,80,120,160,200,240])
-
     print(333)
-
     model_dir = tempfile.mkdtemp()
     m = tf.contrib.learn.LinearClassifier(feature_columns=[sHops,dHops,sTtl,dTtl],
     model_dir=model_dir)
-
   
-
     m.fit(input_fn=lambda: train_input_fn(), steps=200)
-
     results = m.evaluate(input_fn= eval_input_fn, steps=1)
     for key in sorted(results):
       print("%s: %s" % (key, results[key]))
-
   results = m.evaluate(input_fn=eval_input_fn, steps=1)
   print(444)
   for key in sorted(results):
