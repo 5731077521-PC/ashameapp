@@ -63,10 +63,10 @@ def input_fn(df):
   return feature_cols, label
 
 def train_input_fn():
-  train_file = '~/Desktop/pysource/rawdata2-1.csv'  #eval4
+  train_file = '~/Desktop/pysource/testcsv_out2.csv'  #eval4
   df_train =  pd.read_csv(train_file,names=COLUMNS, skiprows=1)
   df_train[LABEL_COLUMN] = (df_train["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
-  df_train["SrcAddr"] = ((df_train["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
+  #df_train["SrcAddr"] = ((df_train["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
   #df_train["StartTime"] = ((df_train["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
   
   return input_fn(df_train)
@@ -75,7 +75,7 @@ def eval_input_fn():
   test_file = '~/Desktop/pysource/rawdata2-2.csv'  #eval5
   df_test = pd.read_csv(test_file,names=COLUMNS, skiprows=1)
   df_test[LABEL_COLUMN] = (df_test["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
-  df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
+  #df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
   #df_test["StartTime"] = ((df_test["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
   
   return input_fn(df_test)
@@ -103,7 +103,7 @@ def main():
     print(333)
 
     model_dir = tempfile.mkdtemp()
-    m = tf.contrib.learn.LinearClassifier(feature_columns=[SrcAddr,SrcRate,sHops,dHops,sTtl],
+    m = tf.contrib.learn.LinearClassifier(feature_columns=[SrcRate,sHops,dHops,sTtl],
     model_dir=model_dir)
 
   
@@ -117,7 +117,7 @@ def main():
 
     pred_proba = m.predict_proba(x=None, input_fn=lambda: eval_input_fn())
     
-    writes = csv.writer(open('testprob_result2.csv', 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
+    writes = csv.writer(open('testprob_result.csv', 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
     writes.writerows(pred_proba)
     
     
