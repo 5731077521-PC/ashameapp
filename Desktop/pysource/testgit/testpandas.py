@@ -90,7 +90,37 @@ def test_predict_fn():
   return input_fn(df_test)
 
 
+def confusion(m,threshold,df_eval):
+  pred_proba = m.predict_proba(input_fn=lambda: test_predict_fn())
+  pred_df = pd.DataFrame(list(pred_proba), columns=['normal','botnet'])
+  pred_df['botnet'] = (pred_df["botnet"].apply(lambda x: x>threshold)).astype(int)
+  pred_df_botnet = pred_df['botnet']
+  eval_df_botnet = df_eval[LABEL_COLUMN]
 
+
+  tp, tn, fp, fn = 0,0,0,0
+  for idx, item in enumerate(eval_df_botnet):
+
+    if eval_df_botnet[idx] == 1:
+      if(pred_df_botnet[idx] == 0):
+        fn += 1
+      if(pred_df_botnet[idx] == 1):
+        tp += 1
+
+
+
+    if eval_df_botnet[idx] == 0:
+      if(pred_df_botnet[idx] == 0):
+        tn += 1
+      if(pred_df_botnet[idx] == 1):
+        fp += 1
+  
+
+  total = tp+tn+fp+fn
+  correct_result = tp+tn
+
+  
+  return correct_result/total, fn
 
 
 def main():
@@ -137,42 +167,33 @@ def main():
     
     #writes = csv.writer(open('testprob_resultxxx.csv', 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
     #writes.writerows(pred_proba)
-	
+    """
     pred_df = pd.DataFrame(list(pred_proba), columns=['normal','botnet'])
     pred_df['botnet'] = (pred_df["botnet"].apply(lambda x: x>0.5)).astype(int)
     #dfx.to_csv('writtenbydfx.csv')
     pred_df_botnet = pred_df['botnet']
-    eval_df_botnet = df_eval[LABEL_COLUMN]
+    eval_df_botnet = df_eval[LABEL_COLUMN] """
+  
+    #input_list = list(np.arange(0.1,0.5,0.1))
+    input_list = [0.00000001,0.0000001,0.000001,0.00001,0.0001,0.1]
 
-    tp, tn, fp, fn = 0,0,0,0
+    for threshold in input_list:
+      accuracy, fn = confusion(m,threshold, df_eval)
+      print("accuracy of ",threshold," : ",accuracy," ,  "
+          "fn : ",fn)
+      
+      
 
    
-
-
-
-
     
     
-    for idx, item in enumerate(eval_df_botnet):
-    	if eval_df_botnet[idx] == 0:
-    		if(pred_df_botnet[idx] == 0): 
-    			tn += 1
-    		if(pred_df_botnet[idx] == 1): 
-    			fp += 1
-
-    	if eval_df_botnet[idx] == 1:
-    		if(pred_df_botnet[idx] == 0): 
-    			fn += 1
-    			print(str(df_SrcAddr[idx]))
-    		if(pred_df_botnet[idx] == 1):
-    			tp += 1
 
     print("done")
     
 
-  	
     
- 	
+    
+  
 
     
 main()
