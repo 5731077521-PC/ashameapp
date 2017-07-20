@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javaapplication5;
+
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -21,7 +21,7 @@ import java.util.TreeMap;
  *
  * @author netklause
  */
-public class JavaApplication5 {
+public class data_analyzer {
     
     private static final String COMMA_DELIMITER = ",";
     private static final String NEW_LINE_SEPARATOR = "\n";
@@ -76,8 +76,8 @@ public class JavaApplication5 {
     public static int Tag_column = 32;
     
     
-    public static String fileName_read = "/home/netklause/Desktop/pysource/test_identify2.csv";
-    public static String fileName_write = "/home/netklause/Desktop/pysource/report_csv.csv";
+    public static String fileName_read;
+    public static String fileName_write;
     public static String line = "";
 
     /**
@@ -85,6 +85,9 @@ public class JavaApplication5 {
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
         // TODO code application logic here
+        fileName_read = "/home/netklause/Desktop/data/" + args[0];
+        fileName_write = "/home/netklause/Desktop/data/" + args[1];
+
         
         Map collection = new HashMap();  
         

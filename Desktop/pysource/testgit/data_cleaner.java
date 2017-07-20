@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javaapplication2;
+
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @author netklause
  */
-public class JavaApplication2 {
+public class data_cleaner {
     
     private static final String COMMA_DELIMITER = ",";
     private static final String NEW_LINE_SEPARATOR = "\n";
@@ -24,8 +24,8 @@ public class JavaApplication2 {
             + "dTtl,TcpRtt,SynAck,AckDat,SrcPkts,DstPkts,SrcBytes,DstBytes,"
             + "SAppBytes,DAppbytes,Dur,TotPkts,TotBytes,TotAppByte,Rate,SrcRate,"
             + "DstRate,Tag";
-    public static String fileName_read = "/home/netklause/Desktop/pysource/cap44aa.csv";
-    public static String fileName_write = "/home/netklause/Desktop/pysource/testcsv_out2.csv";
+    public static String fileName_read = "/home/netklause/Desktop/data/";
+    public static String fileName_write = "/home/netklause/Desktop/data/";
     public static String line = "";
 
     /**
@@ -34,6 +34,8 @@ public class JavaApplication2 {
     public static void main(String[] args) throws FileNotFoundException, IOException{
         // TODO code application logic here
         int lineCount = 1;
+        fileName_read += args[0];
+        fileName_write += args[1];
    
         
         BufferedReader fileReader = null;
