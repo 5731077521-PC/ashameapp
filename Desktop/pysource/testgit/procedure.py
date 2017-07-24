@@ -26,5 +26,5 @@ os.system("java  "+data_cleaner_name+
 	" "+
 	fileName4)
 #os.system("source ~/tensorflow/bin/activate")
-os.system("python testparsing.py "+loc_fileName4+fileName4+" "+fileName5)
+os.system("python parsing_procedure.py "+loc_fileName4+fileName4+" "+fileName5)
 print("celebration granted")

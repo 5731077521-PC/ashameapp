@@ -15,8 +15,7 @@ COLUMNS = ["SrcAddr","DstAddr","Proto","Sport","Dport","State","sTos","dTos","Sr
           ,"TotAppByte","Rate","SrcRate","DstRate","Tag"]
 LABEL_COLUMN = "label"
 CATEGORICAL_COLUMNS = ["Proto","State","Tag"]
-CONTINUOUS_COLUMNS = ["Rate","StartTime","SrcRate","SrcAddr","sHops","dHops","sTtl","dTtl","sTos"]
-IP_COLUMNS = ["NewAddr"]
+CONTINUOUS_COLUMNS = ["SrcBytes","SrcPkts","TotPkts","TotBytes","Rate","StartTime","SrcRate","SrcAddr","sHops","dHops","sTtl","dTtl","sTos"]
 
 train_file = '~/Desktop/pysource/data/cap44aa_clean.csv'
 test_file = '~/Desktop/pysource/data/cap43aa_clean.csv'
@@ -62,9 +61,9 @@ def input_fn(df):
   feature_cols.update(categorical_cols)
   #feature_cols.update(dict(ip_cols))
   # Converts the label column into a constant Tensor.
-  label = tf.constant(df[LABEL_COLUMN].values)
+  #label = tf.constant(df[LABEL_COLUMN].values)
   # Returns the feature columns and the label.
-  return feature_cols, label
+  return feature_cols, df["SrcAddr"]
 
 def train_input_fn():
   df_train =  pd.read_csv(train_file,names=COLUMNS, skiprows=1)
@@ -83,16 +82,16 @@ def eval_input_fn():
   return input_fn(df_test)
 
 def test_predict_fn():
-  df_test = pd.read_csv(test_file,names=COLUMNS, skiprows=1)
-  df_test[LABEL_COLUMN] = (df_test["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
-  df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
+  df_test = pd.read_csv(str(sys.argv[1]),names=COLUMNS, skiprows=1)
+  #df_test[LABEL_COLUMN] = (df_test["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
+  #df_test["SrcAddr"] = ((df_test["SrcAddr"].astype('str')).apply(ip2long)).astype(int)
   #df_test["StartTime"] = ((df_test["StartTime"].astype('str')).apply(stamp2epoch)).astype(int)
   
   return input_fn(df_test)
 
 
 def confusion(m,threshold,df_eval):
-  pred_proba = m.predict_proba(input_fn=lambda: eval_input_fn())
+  pred_proba = m.predict_proba(input_fn=lambda: test_predict_fn())
   pred_df = pd.DataFrame(list(pred_proba), columns=['normal','botnet'])
   pred_df['botnet'] = (pred_df["botnet"].apply(lambda x: x>threshold)).astype(int)
   pred_df_botnet = pred_df['botnet']
@@ -126,9 +125,7 @@ def confusion(m,threshold,df_eval):
 
 def main():
     print(111)
-    #Tag = tf.contrib.layers.sparse_column_with_hash_bucket("Tag", hash_bucket_size=1000)
-
-
+    
     Proto = tf.contrib.layers.sparse_column_with_keys(
       column_name="Proto", keys=["tcp","udp","icmp"])
     State = tf.contrib.layers.sparse_column_with_keys(
@@ -136,69 +133,82 @@ def main():
    
 
     #StartTime = tf.contrib.layers.real_valued_column("StartTime")
-    SrcRate = tf.contrib.layers.real_valued_column("SrcRate")
+    SrcPkts = tf.contrib.layers.real_valued_column("SrcPkts")
     #SrcAddr = tf.contrib.layers.real_valued_column("SrcAddr")
-    sHops = tf.contrib.layers.real_valued_column("sHops")
-    dHops = tf.contrib.layers.real_valued_column("dHops")
-    sTtl = tf.contrib.layers.real_valued_column("sTtl")
+    SrcBytes = tf.contrib.layers.real_valued_column("SrcBytes")
+    TotPkts = tf.contrib.layers.real_valued_column("TotPkts")
+    TotBytes = tf.contrib.layers.real_valued_column("TotBytes")
     #dTtl = tf.contrib.layers.real_valued_column("dTtl")
     sTos = tf.contrib.layers.real_valued_column("sTos")
     Rate = tf.contrib.layers.real_valued_column("Rate")
 
-    #State = tf.contrib.layers.sparse_column_with_hash_bucket("State", hash_bucket_size=10)
-
-    #Proto_x_State = tf.contrib.layers.crossed_column([Proto, State], hash_bucket_size=int(1e2))
 
 
-
-    print(777)
+    print(888)
 
     
     with tf.Session() as sess:
-      model_dir = "model"#tempfile.mkdtemp()
-      m = tf.contrib.learn.LinearClassifier(feature_columns=[sTos,Proto,SrcRate,sHops,dHops,sTtl],
+      model_dir = "model_2"#tempfile.mkdtemp()               #5      19      21       26      27
+      m = tf.contrib.learn.LinearClassifier(feature_columns=[State,SrcPkts,SrcBytes,TotPkts,TotBytes],
       model_dir=model_dir)
 
       #init_op = tf.global_variables_initializer()
       #sess = tf.Session()
       #sess.run(init_op)
 
-      m.fit(input_fn=lambda: train_input_fn(), steps=200)
+      #m.fit(input_fn=lambda: train_input_fn(), steps=200)
       tf.global_variables_initializer()
     
       
     
       
-      results = m.evaluate(input_fn=lambda: eval_input_fn(), steps=1)
-      for key in sorted(results):
-        print("%s: %s" % (key, results[key]))
-
-      
-
-      
-
-      pred_proba = m.predict_proba(input_fn=lambda: eval_input_fn())
-
     
-      #writes = csv.writer(open(str(sys.argv[2]), 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
-      #writes.writerows(pred_proba)
+
       
+
+      
+      x_predict, df_SrcAddr = test_predict_fn()
+      pred_proba = m.predict_proba(input_fn=lambda: test_predict_fn())
+     
+
+
+      #x_train, df_SrcAddr = test_predict_fn()
+      writes = csv.writer(open(str(sys.argv[2]), 'w', newline=''), delimiter=',', quoting=csv.QUOTE_ALL)
+      writes.writerows(pred_proba)
+
+      pred_filter = m.predict_proba(input_fn=lambda: test_predict_fn())
+      pred_df = pd.DataFrame(data=list(pred_filter), columns=['normal','botnet'])
+      result = pd.concat([df_SrcAddr,pred_df['normal'],pred_df['botnet']], axis=1, join='inner')
+      #result.to_csv('/home/netklause/Desktop/data/sandbox/prob_dump/result-2.csv')
+      notify = pd.DataFrame(columns=['SrcAddr','val','line'])
+      threshold_filter = 1e-10
+
+      with open("/home/netklause/Desktop/data/sandbox/prob_dump/filtered.csv", 'a') as f:
+        for i in range(len(result.index)) :
+          if(result['botnet'].loc[i]>threshold_filter):
+            f.write(str(sys.argv[1]) + ","
+              + str(result['SrcAddr'].loc[i]) + ","
+              + str(result['botnet'].loc[i]) + "\n")   
+
+
+
+            
+          
+      """
       pred_df = pd.DataFrame(list(pred_proba), columns=['normal','botnet'])
-      """pred_df['botnet'] = (pred_df["botnet"].apply(lambda x: x>0.5)).astype(int)
+      pred_df['botnet'] = (pred_df["botnet"].apply(lambda x: x>0.5)).astype(int)
       #dfx.to_csv('writtenbydfx.csv')
       pred_df_botnet = pred_df['botnet']
-      eval_df_botnet = df_eval[LABEL_COLUMN] """
+      eval_df_botnet = df_eval[LABEL_COLUMN] 
   
       #input_list = list(np.arange(0.1,0.5,0.1)) 
     
-      input_list = [1e-30,0.1]
-      df_eval = pd.read_csv(test_file,names=COLUMNS, skiprows=1)
-      df_eval[LABEL_COLUMN] = (df_eval["Tag"].apply(lambda x: "Botnet" in x)).astype(int)
+      input_list = [1e-30] 
 
       for threshold in input_list:
          accuracy, fn = confusion(m,threshold, df_eval)
          print("accuracy of ",threshold," : ",accuracy," ,  "
-          "fn : ",fn)  
+          "fn : ",fn)  """
       
       
 

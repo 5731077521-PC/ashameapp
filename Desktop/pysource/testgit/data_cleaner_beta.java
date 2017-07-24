@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @author netklause
  */
-public class data_cleaner {
+public class data_cleaner_beta {
     
     private static final String COMMA_DELIMITER = ",";
     private static final String NEW_LINE_SEPARATOR = "\n";
@@ -50,36 +50,38 @@ public class data_cleaner {
         
         while ((line = fileReader.readLine()) != null) {
             lineCount++;
-            String[] tokens = line.split(COMMA_DELIMITER);
-            int col_count = 0;
+            String[] tokens = line.split(COMMA_DELIMITER); // breakdown this line into tokens
+            int col_count = 1;
             String tempLine = "";
             Boolean isValid = true;
           
             
-            for(String cell : tokens) {
+            for(String cell : tokens) { // scan through this line
                 
                      
-                if(cell.equals("")) {
-                    System.out.println(lineCount);
+                if(cell.equals("") && (col_count == 6 || col_count == 20 || col_count == 22 || col_count == 27 || col_count == 28)) { // Selected columns
+                    //System.out.println(lineCount);
+                    tempLine+="0"; // padding the cell
+                    tempLine+=",";
                     isValid = false;
                     break;
-                } else {
+                } else { // this line has no blank cell
                     
-                    if(col_count==12 || col_count==13) 
+                    if(col_count==13 || col_count==14) // StartTime, LastTime
                         cell = cell.substring(0, 6) + "20" + cell.substring(6, cell.length());
                     
-                    tempLine+=cell;
+                    tempLine+=cell; // concatenate cell into this line
                     
-                    if(col_count<32) 
+                    if(col_count<33) 
                         tempLine+=",";
                 }
                 col_count++;
             }
             
-            if(isValid) {
+            //if(isValid) {
                 fileWriter.append(tempLine);
                 fileWriter.append(NEW_LINE_SEPARATOR);
-            }          
+            //}          
             
         }
         
