@@ -3,25 +3,20 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
 
-# This program require these software : argus , ra (read argus)
-# This program must be deployed in this environment condition : python 3.6, tensorflow 1.x
-# This program need these files residing in the same directory : data_cleaner.java , tensorflow_model.py
-# This program requires folders for dump of capture (dumpFolder), dump of output (prob_dumpDir)
+dumpFolder = "dump_3"+"/"
+dumpDir = "/home/netklause/Desktop/data/sandbox/"+dumpFolder
 
-currentDir = "/home/netklause/Desktop/data/sandbox/" #directory of this file
-data_cleaner_name = "data_cleaner"
-dumpFolder = "dump_3/" 								 #directory of generated file
-dumpDir = currentDir+dumpFolder
-probFolder = "prob_dump/"
-#prob_dumpDir = "~/Desktop/data/sandbox/prob_dump/"	 #directory of output probabilty file
-prob_dumpDir = currentDir+probFolder
 
 def procedure(capture):
 
 	argusFile = capture + '.argus'
 	rawInputFile = capture + '_raw.csv'
 	cleanInputFile = capture + '_clean.csv'
+	cleanInputDir = "~/Desktop/data/sandbox/"
 	generatedProb = capture + "_prob.csv"
+	data_cleaner_name = "data_cleaner"
+	#dumpDir = "~/Desktop/data/sandbox/dump_2/"
+	prob_dumpDir = "~/Desktop/data/sandbox/prob_dump/"
 
 	
 	os.system("argus -r " + dumpDir+capture + " -w " + dumpDir+argusFile)
@@ -44,7 +39,7 @@ def procedure(capture):
 		" "+
 		dumpDir+cleanInputFile)
 	time.sleep(1)
-	os.system("python tensorflow_model.py "+dumpDir+cleanInputFile+" "+prob_dumpDir+generatedProb) 
+	os.system("python parsing_procedure_beta.py "+dumpDir+cleanInputFile+" "+prob_dumpDir+generatedProb) 
 	
 
 
